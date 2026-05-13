@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
+// Ensures gofmt doesn't remove the "fmt"
 var _ = fmt.Print
 
 func main() {
@@ -16,11 +16,18 @@ func main() {
 		fmt.Print("$ ")
 		command, _ := reader.ReadString('\n')
 
+		// if i want to exit the shell
 		command = strings.TrimSpace(command)
 		if command == "exit" {
 			break
 		}
 
-		fmt.Println(command + ": command not found")
+		// if i want echo to my command, method hasPrefix helps to read before the argument passed
+		if strings.HasPrefix(command, "echo ") {
+			fmt.Println(command[5:])
+		} else {
+			fmt.Println(command + ": command not found")
+		}
+
 	}
 }

@@ -4,55 +4,64 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
+	"slices"
 	"strings"
 )
 
-// Ensures gofmt doesn't remove the "fmt"
 var _ = fmt.Print
 
 func main() {
+	// el reader
 	reader := bufio.NewReader(os.Stdin)
+
+	// lista de builtin a usar
+	commands := []string{
+		"exit",
+		"echo",
+		"type",
+	}
+
+	// IMPORTANTE EN GO:
+	// value, err := something()
+
 	for {
 		fmt.Print("$ ")
+
 		command, _ := reader.ReadString('\n')
-
-		// slice mode
-		commands := []string{
-			"exit",
-			"echo",
-			"type",
-		}
-
-		// 1. if i want to exit the shell
 		command = strings.TrimSpace(command)
+
 		if command == "exit" {
 			break
 		}
 
-		// after trim the string
-		builtinToCheck := command[5:]
-
-		// 2.  if i want echo to my command, method hasPrefix helps to read before the argument passed
 		if strings.HasPrefix(command, "echo ") {
-			fmt.Println(builtinToCheck)
-		} else if strings.HasPrefix(command, "type ") {
-			// 3. Work with typeee
-			found := false
-			for _, cmd := range commands {
-				if builtinToCheck == cmd {
-					found = true
-					break
-				}
-			}
-
-			if found {
-				fmt.Println(builtinToCheck + " is a shell builtin")
-			} else {
-				fmt.Println(builtinToCheck + ": not found")
-			}
-		} else {
-			fmt.Println(command + ": command not found")
+			fmt.Println(command[5:])
+			continue
 		}
 
+		if strings.HasPrefix(command, "type ") {
+
+			arg := strings.TrimSpace(command[5:])
+
+			// en reemplazo de for, un loop manual reemplazado por slices
+			if slices.Contains(commands, arg) {
+				fmt.Println(arg + " is a shell builtin")
+				continue
+			}
+
+			// buscar executable   usando path
+			path, err := exec.LookPath(arg)
+
+			if err == nil {
+				fmt.Println(arg + " is " + path)
+			} else {
+				fmt.Println(arg + ": not found")
+			}
+
+			continue
+		}
+
+		fmt.Println(command + ": command not found")
 	}
 }

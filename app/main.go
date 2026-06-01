@@ -65,17 +65,13 @@ func main() {
 
 		program := parts[0]
 
-		// reutiliza la misma lógica de "type"
-		path, err := exec.LookPath(program)
-		if err != nil {
+		if _, err := exec.LookPath(program); err != nil {
 			fmt.Println(program + ": command not found")
 			continue
 		}
 
-		// args excluye el nombre del programa
 		cmd := exec.Command(program, parts[1:]...)
 
-		// conecta entrada/salida al terminal
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

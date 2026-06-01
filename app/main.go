@@ -73,7 +73,7 @@ func main() {
 		}
 
 		// args excluye el nombre del programa
-		cmd := exec.Command(path, parts[1:]...)
+		cmd := exec.Command(program, parts[1:]...)
 
 		// conecta entrada/salida al terminal
 		cmd.Stdin = os.Stdin

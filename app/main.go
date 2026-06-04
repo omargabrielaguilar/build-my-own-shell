@@ -9,6 +9,35 @@ import (
 	"strings"
 )
 
+func parseCommand(input string) []string {
+	var args []string
+	var current strings.Builder
+
+	inQuote := false
+
+	for _, ch := range input {
+		switch {
+		case ch == '\'':
+			inQuote = !inQuote
+
+		case (ch == ' ' || ch == '\t') && !inQuote:
+			if current.Len() > 0 {
+				args = append(args, current.String())
+				current.Reset()
+			}
+
+		default:
+			current.WriteRune(ch)
+		}
+	}
+
+	if current.Len() > 0 {
+		args = append(args, current.String())
+	}
+
+	return args
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -27,19 +56,29 @@ func main() {
 		command, _ := reader.ReadString('\n')
 		command = strings.TrimSpace(command)
 
+		if command == "" {
+			continue
+		}
+
+		parts := parseCommand(command)
+
+		if len(parts) == 0 {
+			continue
+		}
+
 		// exit
-		if command == "exit" {
+		if parts[0] == "exit" {
 			break
 		}
 
 		// echo
-		if strings.HasPrefix(command, "echo ") {
-			fmt.Println(command[5:])
+		if parts[0] == "echo" {
+			fmt.Println(strings.Join(parts[1:], " "))
 			continue
 		}
 
 		// pwd
-		if command == "pwd" {
+		if parts[0] == "pwd" {
 			cwd, err := os.Getwd()
 			if err != nil {
 				fmt.Println(err)
@@ -51,11 +90,14 @@ func main() {
 		}
 
 		// cd
-		if strings.HasPrefix(command, "cd ") {
-			dir := strings.TrimSpace(command[3:])
+		if parts[0] == "cd" {
+			if len(parts) < 2 {
+				continue
+			}
 
-			switch dir {
-			case "~":
+			dir := parts[1]
+
+			if dir == "~" {
 				dir = os.Getenv("HOME")
 			}
 
@@ -67,8 +109,12 @@ func main() {
 		}
 
 		// type
-		if strings.HasPrefix(command, "type ") {
-			arg := strings.TrimSpace(command[5:])
+		if parts[0] == "type" {
+			if len(parts) < 2 {
+				continue
+			}
+
+			arg := parts[1]
 
 			if slices.Contains(commands, arg) {
 				fmt.Println(arg + " is a shell builtin")
@@ -82,16 +128,11 @@ func main() {
 			} else {
 				fmt.Println(arg + ": not found")
 			}
+
 			continue
 		}
 
 		// External commands
-
-		parts := strings.Fields(command)
-
-		if len(parts) == 0 {
-			continue
-		}
 
 		program := parts[0]
 		// cambios permitir imprimir el programa, no la ruta completa
